@@ -1,35 +1,40 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './MovieCard.css';
 
 export default function MovieCard({ movie, type }) {
-  const [showDetails, setShowDetails] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const navigate = useNavigate();
 
-  // Define a class depending on the type
-  const cardClass = type === 'series' ? 'movie-card series' : 'movie-card movie';
+  const handleClick = () => {
+    // Navigate to detail page, passing movie data in state
+    navigate('/detail', { state: { movie } });
+  };
+
+  // Truncate description to ~100 chars
+  const truncatedDesc =
+    movie.description.length > 100
+      ? movie.description.slice(0, 100) + '...'
+      : movie.description;
 
   return (
-    <div className={cardClass}>
-      <img
-        src={movie.image}
-        alt={movie.title}
-        className="movie-poster"
-        onClick={() => setShowDetails(!showDetails)}
-      />
-      <h3 className="movie-title">{movie.title}</h3>
+    <div
+      className={`movie-card ${type}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <img src={movie.image} alt={movie.title} className="movie-poster" />
 
-      {showDetails && (
-        <div className="movie-details">
-          <p>{movie.description}</p>
-          <div className="trailer">
-            <iframe
-              src={movie.trailer}
-              title="Trailer"
-              allowFullScreen
-            ></iframe>
-          </div>
-          <a href={movie.link} target="_blank" rel="noreferrer" className="watch-now">
-            Watch Now
-          </a>
+      {hovered && (
+        <div className="overlay">
+          <h3>{movie.title}</h3>
+          <p>{truncatedDesc}</p>
+          <button className="link-button" onClick={handleClick}>
+            Read More
+          </button>
+          <button className="link-button" onClick={handleClick}>
+            Watch Trailer
+          </button>
         </div>
       )}
     </div>

@@ -1,13 +1,18 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import './App.css';
+// In App.jsx or main entry point
 
-export default function App() {
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import DetailPage from './pages/DetailPage';
+
+function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/detail" element={<DetailPage />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
+
+export default App;

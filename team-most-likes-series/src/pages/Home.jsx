@@ -2,6 +2,7 @@ import { useState } from 'react';
 import MovieRow from '../components/MovieRow';
 import AddMovieForm from '../components/AddMovieForm';
 import './Home.css';
+import logo from '../assets/logo.png';
 
 export default function Home() {
   const [showAdd, setShowAdd] = useState(false);
@@ -36,7 +37,7 @@ export default function Home() {
   return (
     <div className="home">
       <header className="home-header">
-        <h1 className="logo">MyFlix</h1>
+        <img src={logo} alt="" />
         <button className="add-button" onClick={() => setShowAdd(!showAdd)}>
           {showAdd ? 'Close' : 'Add Movie/Series'}
         </button>
