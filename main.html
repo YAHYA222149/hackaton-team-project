@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Analyzer</title>
+    <style>
+    
+        .completed {
+            color: green;
+        }
+        .pending {
+            color: red;
+        }
+        #progressBarContainer {
+            width: 50%;
+            background-color: #eee;
+            border-radius: 8px;
+        }
+        #progressBar {
+            height: 100%;
+            
+            background-color: #4caf50;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            line-height: 30px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Task Analyzer</h1>
+    <select id="taskFilter" onchange="filterTasks()">
+        <option value="all">All Tasks</option>
+        <option value="done">Completed Tasks</option>
+        <option value="undone">Pending Tasks</option>
+    </select>
+    <ul id="taskList"></ul>
+    <div id="progressBarContainer">
+        <div id="progressBar">0%</div>
+    </div>
+    <script src="task-analyzer.js"></script>
+</body>
+</html>
