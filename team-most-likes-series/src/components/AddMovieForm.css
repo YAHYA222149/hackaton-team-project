@@ -1,0 +1,38 @@
+.add-form {
+  border-top: 2px solid #e50914;
+  padding: 16px;
+  background-color: #111;
+}
+
+.add-form h2 {
+  margin-bottom: 12px;
+  font-size: 20px;
+  color: #e50914;
+}
+
+.add-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.add-form input {
+  background-color: #222;
+  border: 1px solid #333;
+  padding: 8px;
+  color: white;
+  border-radius: 4px;
+}
+
+.add-form button {
+  background-color: #e50914;
+  border: none;
+  padding: 8px;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
+
+.add-form button:hover {
+  background-color: #b00610;
+}

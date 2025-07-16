@@ -1,0 +1,52 @@
+.movie-row {
+  margin: 20px 0;
+  padding: 16px;
+  border-radius: 8px;
+  color: white;
+}
+
+/* Different background for movies and series */
+.movie-row.movie {
+  background-color: #111;  /* darker black */
+}
+
+.movie-row.series {
+  background-color: #222;  /* lighter black */
+}
+
+/* Header with title and filter aligned */
+.row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.row-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #e50914; /* Netflix red */
+}
+
+/* Filter select styling */
+.filter-select {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  background-color: #333;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.filter-select:hover {
+  background-color: #555;
+}
+
+/* Cards container with horizontal scroll */
+.cards-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  padding-bottom: 8px;
+}

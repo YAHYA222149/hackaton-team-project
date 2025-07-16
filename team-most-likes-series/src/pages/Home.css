@@ -1,0 +1,56 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+.home {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: black;
+  color: white;
+}
+
+.home-header {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 2px solid #e50914;
+  background-color: black;
+}
+
+.logo {
+  color: #e50914;
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.add-button {
+  background-color: #e50914;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  height: 32px;
+}
+
+.add-button:hover {
+  background-color: #b00610;
+}
+
+.home-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
