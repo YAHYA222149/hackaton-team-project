@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Settings, LogOut, User } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Settings, LogOut, User, Heart, Search } from 'lucide-react';
 import HeroSection from '../components/HeroSection';
-import MovieGrid from '../components/MovieGrid';
+import ScrollableMovieGrid from '../components/ScrollableMovieGrid';
 import Logo from '../components/Logo';
 import AddMovieForm from '../components/AddMovieForm';
+import SearchFilter from '../components/SearchFilter';
+import VideoPlayer from '../components/VideoPlayer';
+import LikedMovies from '../components/LikedMovies';
+import MovieCard from '../components/MovieCard';
 import { catalogAPI, adminAPI } from '../services/api';
 import './Home.css';
 
@@ -13,16 +17,29 @@ export default function Home() {
   const [featuredContent, setFeaturedContent] = useState([]);
   const [movies, setMovies] = useState([]);
   const [series, setSeries] = useState([]);
+  const [allContent, setAllContent] = useState([]);
+  const [filteredContent, setFilteredContent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
   const [showAdminMenu, setShowAdminMenu] = useState(false);
+  const [currentView, setCurrentView] = useState('home'); // home, search, liked
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [searchFilters, setSearchFilters] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadContent();
     checkAdminStatus();
   }, []);
+
+  useEffect(() => {
+    if (currentView === 'search') {
+      applyFilters();
+    }
+  }, [allContent, searchFilters, searchTerm]);
 
   const checkAdminStatus = () => {
     const token = localStorage.getItem('adminToken');
@@ -43,53 +60,120 @@ export default function Home() {
       const featuredResponse = await catalogAPI.getFeatured();
       setFeaturedContent(featuredResponse.data || []);
 
-      // Load movies
-      const moviesResponse = await catalogAPI.getAll({ type: 'Movie', limit: 12 });
-      setMovies(moviesResponse.data || []);
+      // Load all content for search
+      const allResponse = await catalogAPI.getAll({ limit: 100 });
+      const allData = allResponse.data || [];
+      setAllContent(allData);
 
-      // Load series
-      const seriesResponse = await catalogAPI.getAll({ type: 'Series', limit: 12 });
-      setSeries(seriesResponse.data || []);
+      // Separate by type
+      const moviesData = allData.filter(item => item.type === 'Movie');
+      const seriesData = allData.filter(item => item.type === 'Series');
+      
+      setMovies(moviesData);
+      setSeries(seriesData);
 
     } catch (err) {
       console.error('Error loading content:', err);
       setError('Failed to load content. Please try again later.');
-      
-      // Fallback to dummy data if API fails
-      const fallbackFeatured = [
-        {
-          _id: '1',
-          title: 'The Matrix',
-          type: 'Movie',
-          genre: ['Action', 'Sci-Fi'],
-          description: 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',
-          imageUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=800',
-          rating: 8.7,
-          duration: '2h 16m',
-          featured: true,
-          netflixLink: 'https://netflix.com',
-          trailerUrl: 'https://youtube.com/watch?v=m8e-FF8MsqU'
-        }
-      ];
-      
-      const fallbackMovies = [
-        {
-          _id: '2',
-          title: 'Inception',
-          type: 'Movie',
-          genre: ['Action', 'Drama', 'Sci-Fi'],
-          description: 'A thief who steals corporate secrets through dream-sharing technology.',
-          imageUrl: 'https://images.unsplash.com/photo-1489599328877-d2eade8b5fdc?w=500',
-          rating: 8.8,
-          duration: '2h 28m',
-        }
-      ];
-      
-      setFeaturedContent(fallbackFeatured);
-      setMovies(fallbackMovies);
-      setSeries([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...allContent];
+
+    // Apply search term
+    if (searchTerm) {
+      filtered = filtered.filter(item =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.director?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.cast?.some(actor => actor.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        item.genre?.some(genre => genre.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Apply filters
+    if (searchFilters.type) {
+      filtered = filtered.filter(item => item.type === searchFilters.type);
+    }
+
+    if (searchFilters.genre) {
+      filtered = filtered.filter(item => item.genre?.includes(searchFilters.genre));
+    }
+
+    if (searchFilters.rating) {
+      const minRating = parseFloat(searchFilters.rating);
+      filtered = filtered.filter(item => (item.rating || 0) >= minRating);
+    }
+
+    if (searchFilters.year) {
+      if (searchFilters.year.includes('s')) {
+        // Decade filter
+        const decade = parseInt(searchFilters.year);
+        filtered = filtered.filter(item => {
+          const year = new Date(item.releaseDate).getFullYear();
+          return year >= decade && year < decade + 10;
+        });
+      } else {
+        // Specific year
+        const year = parseInt(searchFilters.year);
+        filtered = filtered.filter(item => {
+          return new Date(item.releaseDate).getFullYear() === year;
+        });
+      }
+    }
+
+    // Apply sorting
+    if (searchFilters.sort) {
+      filtered.sort((a, b) => {
+        switch (searchFilters.sort) {
+          case 'title':
+            return a.title.localeCompare(b.title);
+          case 'rating':
+            return (b.rating || 0) - (a.rating || 0);
+          case 'oldest':
+            return new Date(a.releaseDate) - new Date(b.releaseDate);
+          case 'popular':
+            return (b.views || 0) - (a.views || 0);
+          case 'newest':
+          default:
+            return new Date(b.releaseDate) - new Date(a.releaseDate);
+        }
+      });
+    }
+
+    setFilteredContent(filtered);
+  };
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    if (term) {
+      setCurrentView('search');
+    } else if (currentView === 'search') {
+      setCurrentView('home');
+    }
+  };
+
+  const handleFilter = (filters) => {
+    setSearchFilters(filters);
+    setCurrentView('search');
+  };
+
+  const resetFilters = () => {
+    setSearchFilters({});
+    setSearchTerm('');
+    setCurrentView('home');
+  };
+
+  const handlePlayTrailer = (item) => {
+    if (item.trailerUrl) {
+      setSelectedVideo({
+        url: item.trailerUrl,
+        title: `${item.title} - Trailer`
+      });
+      setShowVideoPlayer(true);
     }
   };
 
@@ -102,17 +186,16 @@ export default function Home() {
       console.error('Error adding movie:', error);
       
       // More detailed error handling
-      let errorMessage = 'Failed to add movie. Please try again.';
-      if (error.response?.data) {
-        const serverError = error.response.data;
-        if (serverError.errors && Array.isArray(serverError.errors)) {
-          errorMessage = serverError.errors.map(err => err.msg).join(', ');
-        } else if (serverError.message) {
-          errorMessage = serverError.message;
-        }
+      if (error.response?.data?.errors) {
+        const validationErrors = error.response.data.errors
+          .map(err => err.msg || err.message)
+          .join('\\n');
+        alert(`Validation errors:\\n${validationErrors}`);
+      } else if (error.response?.data?.message) {
+        alert(`Error: ${error.response.data.message}`);
+      } else {
+        alert('Failed to add movie. Please try again.');
       }
-      
-      alert(errorMessage);
     }
   };
 
@@ -178,7 +261,49 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <Logo size="medium" />
             
+            {/* Navigation Buttons */}
             <div className="flex items-center gap-4">
+              <motion.button
+                onClick={() => setCurrentView('home')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors duration-300 ${
+                  currentView === 'home' 
+                    ? 'bg-gold-500 text-black' 
+                    : 'text-white hover:bg-white/10'
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Home
+              </motion.button>
+
+              <motion.button
+                onClick={() => setCurrentView('search')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors duration-300 ${
+                  currentView === 'search' 
+                    ? 'bg-gold-500 text-black' 
+                    : 'text-white hover:bg-white/10'
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Search className="w-4 h-4" />
+                Browse
+              </motion.button>
+
+              <motion.button
+                onClick={() => setCurrentView('liked')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors duration-300 ${
+                  currentView === 'liked' 
+                    ? 'bg-red-500 text-white' 
+                    : 'text-white hover:bg-white/10'
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Heart className="w-4 h-4" />
+                My List
+              </motion.button>
+
               {error && (
                 <motion.button
                   onClick={loadContent}
@@ -202,32 +327,34 @@ export default function Home() {
                     {adminUser?.username}
                   </motion.button>
 
-                  {showAdminMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute right-0 top-full mt-2 w-48 bg-dark-800 border border-white/10 rounded-lg shadow-xl overflow-hidden"
-                    >
-                      <button
-                        onClick={() => {
-                          setShowAddForm(true);
-                          setShowAdminMenu(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-white hover:bg-white/10 transition-colors duration-300"
+                  <AnimatePresence>
+                    {showAdminMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 top-full mt-2 w-48 bg-dark-800 border border-white/10 rounded-lg shadow-xl overflow-hidden"
                       >
-                        <Plus className="w-4 h-4" />
-                        Add Content
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-500/10 transition-colors duration-300"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Logout
-                      </button>
-                    </motion.div>
-                  )}
+                        <button
+                          onClick={() => {
+                            setShowAddForm(true);
+                            setShowAdminMenu(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-3 text-white hover:bg-white/10 transition-colors duration-300"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add Content
+                        </button>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-500/10 transition-colors duration-300"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Logout
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : (
                 <motion.button
@@ -244,70 +371,147 @@ export default function Home() {
         </div>
       </motion.header>
 
-      {/* Hero Section */}
-      <HeroSection featuredContent={featuredContent} />
+      {/* Main Content */}
+      <main className="pt-20">
+        {currentView === 'home' && (
+          <>
+            {/* Hero Section */}
+            <HeroSection 
+              featuredContent={featuredContent} 
+              onPlayTrailer={handlePlayTrailer}
+            />
 
-      {/* Content Sections */}
-      <main className="relative z-10">
-        {movies.length > 0 && (
-          <MovieGrid
-            title="Popular Movies"
-            movies={movies}
-            type="carousel"
-          />
-        )}
+            {/* Content Sections */}
+            <div className="relative z-10">
+              {movies.length > 0 && (
+                <ScrollableMovieGrid
+                  title="Popular Movies"
+                  movies={movies}
+                  onPlayTrailer={handlePlayTrailer}
+                />
+              )}
 
-        {series.length > 0 && (
-          <MovieGrid
-            title="TV Series"
-            movies={series}
-            type="carousel"
-          />
-        )}
+              {series.length > 0 && (
+                <ScrollableMovieGrid
+                  title="TV Series"
+                  movies={series}
+                  onPlayTrailer={handlePlayTrailer}
+                />
+              )}
 
-        {/* Error Message */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="container mx-auto px-4 md:px-6 lg:px-8 py-8"
-          >
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center">
-              <p className="text-red-400 mb-4">{error}</p>
-              <button
-                onClick={loadContent}
-                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-300"
-              >
-                Try Again
-              </button>
+              {/* Error Message */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="container mx-auto px-4 md:px-6 lg:px-8 py-8"
+                >
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center">
+                    <p className="text-red-400 mb-4">{error}</p>
+                    <button
+                      onClick={loadContent}
+                      className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-300"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                </motion.div>
+              )}
             </div>
-          </motion.div>
+          </>
         )}
+
+        {currentView === 'search' && (
+          <div className="container mx-auto px-4 py-8">
+            <SearchFilter
+              onSearch={handleSearch}
+              onFilter={handleFilter}
+              filters={searchFilters}
+              resetFilters={resetFilters}
+            />
+            
+            {filteredContent.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+              >
+                {filteredContent.map((item, index) => (
+                  <motion.div
+                    key={item._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <MovieCard
+                      movie={item}
+                      onPlayTrailer={() => handlePlayTrailer(item)}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : searchTerm || Object.values(searchFilters).some(f => f) ? (
+              <div className="text-center py-12">
+                <Search className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">No results found</h3>
+                <p className="text-gray-400">Try adjusting your search or filter criteria</p>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Search className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">Browse our catalog</h3>
+                <p className="text-gray-400">Use the search and filters above to find content</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {currentView === 'liked' && <LikedMovies />}
       </main>
 
       {/* Add Movie Form Modal */}
-      {showAddForm && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setShowAddForm(false)}
-        >
+      <AnimatePresence>
+        {showAddForm && (
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-2xl max-h-[90vh] overflow-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowAddForm(false);
+              }
+            }}
           >
-            <AddMovieForm
-              onSubmit={handleAddMovie}
-              onCancel={() => setShowAddForm(false)}
-            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="max-h-[90vh] overflow-y-auto"
+            >
+              <AddMovieForm
+                onSubmit={handleAddMovie}
+                onCancel={() => setShowAddForm(false)}
+              />
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
+      </AnimatePresence>
+
+      {/* Video Player Modal */}
+      <AnimatePresence>
+        {showVideoPlayer && selectedVideo && (
+          <VideoPlayer
+            videoUrl={selectedVideo.url}
+            title={selectedVideo.title}
+            onClose={() => {
+              setShowVideoPlayer(false);
+              setSelectedVideo(null);
+            }}
+            autoPlay={true}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -54,3 +54,61 @@
   overflow-y: auto;
   padding: 16px;
 }
+
+/* Scrollable Movie Sections */
+.movies-section {
+  padding: 0 20px;
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 16px;
+  margin-left: 4px;
+}
+
+.movie-grid {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 20px 0;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.movie-grid::-webkit-scrollbar {
+  height: 6px;
+}
+
+.movie-grid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.movie-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.movie-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 768px) {
+  .movies-section {
+    padding: 0 16px;
+    margin-bottom: 32px;
+  }
+  
+  .section-title {
+    font-size: 20px;
+  }
+  
+  .movie-grid {
+    gap: 16px;
+  }
+}

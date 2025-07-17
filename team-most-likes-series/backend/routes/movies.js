@@ -167,10 +167,6 @@ router.get('/:id', async (req, res) => {
 // POST /api/catalog/add - Add new movie/series (Admin only)
 router.post('/add', authenticateAdmin, validateMovie, async (req, res) => {
   try {
-    // Log the incoming request body for debugging
-    console.log('Incoming request body:', JSON.stringify(req.body, null, 2));
-    
-    // Check validation results
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       console.log('Validation errors:', errors.array());
@@ -209,74 +205,6 @@ router.post('/add', authenticateAdmin, validateMovie, async (req, res) => {
       success: false,
       message: 'Error adding movie',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
-
-// PUT /api/catalog/:id - Update movie/series (Admin only)
-router.put('/:id', authenticateAdmin, validateMovie, async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation errors',
-        errors: errors.array()
-      });
-    }
-
-    const movie = await Movie.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-
-    if (!movie) {
-      return res.status(404).json({
-        success: false,
-        message: 'Movie not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Movie updated successfully',
-      data: movie
-    });
-  } catch (error) {
-    console.error('Update movie error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error updating movie'
-    });
-  }
-});
-
-// DELETE /api/catalog/:id - Delete movie/series (Admin only)
-router.delete('/:id', authenticateAdmin, async (req, res) => {
-  try {
-    const movie = await Movie.findByIdAndUpdate(
-      req.params.id,
-      { isActive: false },
-      { new: true }
-    );
-
-    if (!movie) {
-      return res.status(404).json({
-        success: false,
-        message: 'Movie not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Movie deleted successfully'
-    });
-  } catch (error) {
-    console.error('Delete movie error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting movie'
     });
   }
 });

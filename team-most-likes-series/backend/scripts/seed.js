@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import Movie from '../models/Movie.js';
 import Admin from '../models/Admin.js';
@@ -33,7 +32,7 @@ const sampleMovies = [
     description: "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.",
     type: "Movie",
     genre: ["Crime", "Drama"],
-    imageUrl: "https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzUwNDIwNDY@._V1_.jpg",
+    imageUrl: "https://occ-0-8407-1009.1.nflxso.net/dnm/api/v6/Qs00mKCpRvrkl3HZAN5KwEL1kpE/AAAABQtKfoMcZ_Y6_I8he5fS3_iWJ3qIGiennI96afL-MJCBvlruI6PUuH7hgymxgsvD8hchPjI4adjnMIXuLdpdiWhvjPUP_kVyFqU6.jpg",
     trailerUrl: "https://www.youtube.com/watch?v=UaVTIH8mujA",
     netflixLink: "https://www.netflix.com/title/60011152",
     rating: 9.2,
@@ -147,7 +146,7 @@ const sampleMovies = [
     description: "A poor family schemes to become employed by a wealthy family and infiltrate their household by posing as unrelated, highly qualified individuals.",
     type: "Movie",
     genre: ["Comedy", "Drama", "Thriller"],
-    imageUrl: "https://m.media-amazon.com/images/M/MV5BYWZjMjE3ZTItODQ2ZC00NTY5LWE0ZDYtZTI3MjcwN2Q5NTVkXkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_.jpg",
+    imageUrl: "https://occ-0-8407-92.1.nflxso.net/dnm/api/v6/Z-WHgqd_TeJxSuha8aZ5WpyLcX8/AAAABU8cfFH1oPrMYQ0utvshjZDTtw-6IJCE1N7_jZb6lasYQ8_aQEGCwoqsX1ryXnWZcqFlyqo2bPfZIBL_hTiuNPEOnxiJLTmdR2hc.jpg",
     trailerUrl: "https://www.youtube.com/watch?v=5xH0HfJHsaY",
     netflixLink: "https://www.netflix.com/title/81160566",
     rating: 8.6,
@@ -263,7 +262,7 @@ const sampleMovies = [
     description: "Follows the political rivalries and romance of Queen Elizabeth II's reign and the events that shaped the second half of the twentieth century.",
     type: "Series",
     genre: ["Biography", "Drama", "History"],
-    imageUrl: "https://m.media-amazon.com/images/M/MV5BZjI0ODk3ODctNzNmZC00MzgxLWJmNjQtMWM4ODVlZGJhMTU5XkEyXkFqcGdeQXVyMTUzMTg2ODkz._V1_.jpg",
+    imageUrl: "https://occ-0-8407-90.1.nflxso.net/dnm/api/v6/E8vDc_W8CLv7-yMQu8KMEC7Rrr8/AAAABcSnFM_V_mWxOvdPn8vTB2rispevVWyYGj7IocNaEZBzvbvFIn6KzJZiFFV3JHVth9X_4wJ5ukU3_Wm0RCh_Aj2dqoy6LeacObX8.jpg",
     trailerUrl: "https://www.youtube.com/watch?v=JWtnJjn6ng0",
     netflixLink: "https://www.netflix.com/title/80025678",
     rating: 8.7,
@@ -282,7 +281,7 @@ const sampleMovies = [
     description: "Hundreds of cash-strapped players accept a strange invitation to compete in children's games for a tempting prize.",
     type: "Series",
     genre: ["Action", "Drama", "Mystery"],
-    imageUrl: "https://m.media-amazon.com/images/M/MV5BYWE3MDVkN2EtNjQ5MS00ZDQ4LTliNzYtMjc2YWMzMDEwMTA3XkEyXkFqcGdeQXVyMTEyMjM2NDc2._V1_.jpg",
+    imageUrl: "https://occ-0-8407-90.1.nflxso.net/dnm/api/v6/Z-WHgqd_TeJxSuha8aZ5WpyLcX8/AAAABdWejBzwyTY8b6TDhV8fS7YUtOfROMX5cuyF44z2RRD7rS4rV7NpmiFhSI76Xxh2RqNis3sfepSG2WCw4DLDMVSPM9TY3-ufOb6B.jpg",
     trailerUrl: "https://www.youtube.com/watch?v=oqxAJKy0ii4",
     netflixLink: "https://www.netflix.com/title/81040344",
     rating: 8.0,

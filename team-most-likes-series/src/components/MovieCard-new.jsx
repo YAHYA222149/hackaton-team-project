@@ -70,7 +70,7 @@ export default function MovieCard({
   const imageUrl = movie.imageUrl || movie.image;
 
   return (
-    <div className="movie-card" onClick={handleClick}>
+    <div className="movie-card-new" onClick={handleClick}>
       <div className="movie-image">
         <img src={imageUrl} alt={movie.title} />
         

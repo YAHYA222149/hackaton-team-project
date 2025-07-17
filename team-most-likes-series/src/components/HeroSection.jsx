@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Info, Star, Clock, Calendar } from 'lucide-react';
 
-const HeroSection = ({ featuredContent = [] }) => {
+const HeroSection = ({ featuredContent = [], onPlayTrailer }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,7 +45,9 @@ const HeroSection = ({ featuredContent = [] }) => {
   };
 
   const handleWatchTrailer = () => {
-    if (currentMovie.trailerUrl) {
+    if (onPlayTrailer && currentMovie.trailerUrl) {
+      onPlayTrailer(currentMovie);
+    } else if (currentMovie.trailerUrl) {
       window.open(currentMovie.trailerUrl, '_blank');
     }
   };

@@ -6,7 +6,8 @@ import {
   Film, Tv, Share2, Heart, BookmarkPlus, Info 
 } from 'lucide-react';
 import Logo from '../components/Logo';
-import MovieGrid from '../components/MovieGrid';
+import MovieGrid from '../components/ScrollableMovieGrid';
+import VideoPlayer from '../components/VideoPlayer';
 import { catalogAPI } from '../services/api';
 import './DetailPage.css';
 
@@ -20,6 +21,8 @@ export default function DetailPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(!movie);
   const [error, setError] = useState(null);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
 
   useEffect(() => {
     if (!movie) {
@@ -29,13 +32,25 @@ export default function DetailPage() {
     }
 
     loadRelatedContent();
+    checkIfLiked();
     
-    // Check if bookmarked/liked (from localStorage for demo)
+    // Check if bookmarked (from localStorage for demo)
     const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
-    const likes = JSON.parse(localStorage.getItem('likes') || '[]');
     setIsBookmarked(bookmarks.includes(movie._id || movie.id));
-    setIsLiked(likes.includes(movie._id || movie.id));
+
+    // Listen for liked movies updates
+    const handleLikedMoviesUpdate = () => {
+      checkIfLiked();
+    };
+
+    window.addEventListener('likedMoviesUpdated', handleLikedMoviesUpdate);
+    return () => window.removeEventListener('likedMoviesUpdated', handleLikedMoviesUpdate);
   }, [movie, navigate]);
+
+  const checkIfLiked = () => {
+    const likedMovies = JSON.parse(localStorage.getItem('likedMovies') || '[]');
+    setIsLiked(likedMovies.some(liked => liked._id === movie._id));
+  };
 
   const loadRelatedContent = async () => {
     if (!movie) return;
@@ -73,7 +88,11 @@ export default function DetailPage() {
 
   const handleWatchTrailer = () => {
     if (movie.trailerUrl || movie.trailer) {
-      window.open(movie.trailerUrl || movie.trailer, '_blank');
+      setSelectedVideo({
+        url: movie.trailerUrl || movie.trailer,
+        title: `${movie.title} - Trailer`
+      });
+      setShowVideoPlayer(true);
     }
   };
 
@@ -93,18 +112,21 @@ export default function DetailPage() {
   };
 
   const handleLike = () => {
-    const likes = JSON.parse(localStorage.getItem('likes') || '[]');
-    const movieId = movie._id || movie.id;
+    const likedMovies = JSON.parse(localStorage.getItem('likedMovies') || '[]');
     
     if (isLiked) {
-      const newLikes = likes.filter(id => id !== movieId);
-      localStorage.setItem('likes', JSON.stringify(newLikes));
+      const updatedLiked = likedMovies.filter(liked => liked._id !== movie._id);
+      localStorage.setItem('likedMovies', JSON.stringify(updatedLiked));
+      setIsLiked(false);
     } else {
-      likes.push(movieId);
-      localStorage.setItem('likes', JSON.stringify(likes));
+      const movieWithDate = { ...movie, likedAt: new Date().toISOString() };
+      likedMovies.push(movieWithDate);
+      localStorage.setItem('likedMovies', JSON.stringify(likedMovies));
+      setIsLiked(true);
     }
     
-    setIsLiked(!isLiked);
+    // Dispatch event to update other components
+    window.dispatchEvent(new CustomEvent('likedMoviesUpdated'));
   };
 
   const handleShare = () => {
@@ -460,6 +482,21 @@ export default function DetailPage() {
           </AnimatePresence>
         </div>
       </section>
+
+      {/* Video Player Modal */}
+      <AnimatePresence>
+        {showVideoPlayer && selectedVideo && (
+          <VideoPlayer
+            videoUrl={selectedVideo.url}
+            title={selectedVideo.title}
+            onClose={() => {
+              setShowVideoPlayer(false);
+              setSelectedVideo(null);
+            }}
+            autoPlay={true}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
